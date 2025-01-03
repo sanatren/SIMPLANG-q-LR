@@ -30,16 +30,26 @@ Model Performance
 <h2>Hardware Considerations</h2>
 
 A100 GPUs provide optimal performance
+
 H100 GPUs can reduce training time by 3-4x
-Optimization Techniques
+
+<h2>Optimization Techniques</h2>
+
 Mixed precision training
+
 Gradient accumulation
+
 Distributed training support
+
 Future Work
 [ ] Implement beam search for inference
+
 [ ] Add support for multiple reference simplifications
+
 [ ] Explore transformer-based architectures
+
 [ ] Implement dynamic batch sizing
+
 [ ] Add multi-GPU training support
 
 under work... for more hypertuning
@@ -47,10 +57,15 @@ under work... for more hypertuning
 
 <h1>Performance Analysis</h1>
 Training Metrics
+
 Dataset: WikiLarge
+
 Training pairs: 296,402
+
 Validation pairs: 992
+
 Test pairs: 359
+
 Hardware Requirements
 For optimal performance:
 | GPU Model | VRAM | Batch Size | Training Time (50 epochs) |
