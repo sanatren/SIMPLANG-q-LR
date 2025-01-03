@@ -11,7 +11,7 @@ Original file is located at
 from google.colab import drive
 drive.mount('/content/drive')
 
-# Essential imports
+
 import tensorflow as tf
 import numpy as np
 import os
@@ -22,13 +22,13 @@ import random
 import pickle
 import matplotlib.pyplot as plt
 
-# Set working directory
+#working directory
 work_dir = '/content/drive/MyDrive/text_simplification'
 if not os.path.exists(work_dir):
     os.makedirs(work_dir)
 os.chdir(work_dir)
 
-# Create directories for model saving
+#directories for model saving
 model_dir = os.path.join(work_dir, 'saved_models')
 checkpoint_dir = os.path.join(work_dir, 'checkpoints')
 if not os.path.exists(model_dir):
@@ -40,7 +40,7 @@ if not os.path.exists(checkpoint_dir):
 print("GPU Available: ", tf.test.is_gpu_available())
 print("GPU Device Name: ", tf.test.gpu_device_name())
 
-# Configure GPU memory growth
+#Configure GPU memory growth
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
     try:
@@ -71,9 +71,9 @@ class Config:
 
 config = Config()
 
-# ============================================================================
-# MODEL ARCHITECTURE
-# ============================================================================
+
+# Model body
+
 class Encoder(tf.keras.Model):
     def __init__(self, vocab_size, embedding_dim, hidden_units):
         super(Encoder, self).__init__()
@@ -146,9 +146,7 @@ class TextSimplificationModel(tf.keras.Model):
 
         return tf.stack(predictions, axis=1)
 
-# ============================================================================
-# MODEL SAVING UTILITIES
-# ============================================================================
+#model saving utilities (checkpoints if exist)
 def save_model_checkpoint(model, epoch, optimizer, loss, sari, prefix='checkpoint'):
     """Save model checkpoint with all training state"""
     checkpoint_path = os.path.join(config.checkpoint_dir, f'{prefix}_epoch_{epoch}')
@@ -169,7 +167,7 @@ def save_model_checkpoint(model, epoch, optimizer, loss, sari, prefix='checkpoin
 def load_model_checkpoint(model, optimizer, prefix='checkpoint', epoch=None):
     """Load model checkpoint and training state"""
     if epoch is None:
-        # Find latest checkpoint
+        #find the  last checkpoint
         checkpoints = [f for f in os.listdir(config.checkpoint_dir) if f.endswith('_weights.h5')]
         if not checkpoints:
             print("No checkpoints found.")
@@ -180,19 +178,19 @@ def load_model_checkpoint(model, optimizer, prefix='checkpoint', epoch=None):
 
     checkpoint_path = os.path.join(config.checkpoint_dir, f'{prefix}_epoch_{epoch}')
 
-    # Load model weights
+    # model weights
     model.load_weights(checkpoint_path + '_weights.h5')
 
-    # Load training state
+    #load training state
     training_state = np.load(checkpoint_path + '_state.npy', allow_pickle=True).item()
     optimizer.set_weights(training_state['optimizer_weights'])
 
     print(f"Loaded checkpoint from epoch {epoch}")
     return epoch, training_state['loss'], training_state['sari']
 
-# ============================================================================
-# DATA LOADING AND PREPROCESSING
-# ============================================================================
+
+#data loading & text preprocessing 
+
 def load_and_preprocess_data():
     """Load and preprocess the WikiLarge dataset"""
     def load_file(filename):
@@ -211,7 +209,7 @@ def load_and_preprocess_data():
     print(f"Loaded {len(valid_src)} validation pairs")
     print(f"Loaded {len(test_src)} test pairs")
 
-    # Initialize tokenizer
+    #tokenizer 
     tokenizer = Tokenizer(oov_token='<UNK>')
     tokenizer.fit_on_texts(train_src + train_dst + valid_src + valid_dst)
     config.vocab_size = len(tokenizer.word_index) + 1
@@ -221,22 +219,21 @@ def load_and_preprocess_data():
         dst_seqs = tokenizer.texts_to_sequences(dst_texts)
 
         src_padded = pad_sequences(src_seqs, maxlen=config.max_length, padding='post')
-        dst_padded = pad_sequences(dst_seqs, maxlen=config.max_length, padding='post')
+        dst_padded = pad_sequences(dst_seqs, maxlen=config.max_length, padding='post') #post paddding for equal dimensions
 
         return src_padded, dst_padded
 
-    print("Preparing datasets...")
+    #print("Preparing datasets...")
     train_data = prepare_data(train_src, train_dst)
     valid_data = prepare_data(valid_src, valid_dst)
     test_data = prepare_data(test_src, test_dst)
 
     return train_data, valid_data, test_data, tokenizer
 
-# ============================================================================
-# SARI METRIC
-# ============================================================================
+
+# SARI metric for model evaluation and generalization
+
 def calculate_sari(orig_sentences, pred_sentences, ref_sentences):
-    """Calculate SARI score for text simplification"""
     def get_ngrams(sentence, n):
         words = sentence.lower().split()
         return set(' '.join(words[i:i+n]) for i in range(len(words)-n+1))
@@ -252,29 +249,29 @@ def calculate_sari(orig_sentences, pred_sentences, ref_sentences):
         return 2 * precision * recall / (precision + recall)
 
     scores = []
+    
     for orig, pred, ref in zip(orig_sentences, pred_sentences, ref_sentences):
         score = 0
-        for n in range(1, 5):  # Use 1-4 grams
-            orig_ngrams = get_ngrams(orig, n)
-            pred_ngrams = get_ngrams(pred, n)
+        for n in range(1, 5):  #1-4 grams
+            orig_ngrams =get_ngrams(orig, n)
+            pred_ngrams= get_ngrams(pred, n)
             ref_ngrams = get_ngrams(ref, n)
-
             add_score = compute_precision_recall_f1(
-                pred_ngrams - orig_ngrams,
-                ref_ngrams - orig_ngrams
+                pred_ngrams -orig_ngrams,
+                ref_ngrams- orig_ngrams
             )
             keep_score = compute_precision_recall_f1(
-                pred_ngrams & orig_ngrams,
-                ref_ngrams & orig_ngrams
+                pred_ngrams&orig_ngrams,
+                ref_ngrams &orig_ngrams
             )
-            del_score = compute_precision_recall_f1(
-                orig_ngrams - pred_ngrams,
+            del_score =compute_precision_recall_f1(
+                orig_ngrams -pred_ngrams,
                 orig_ngrams - ref_ngrams
             )
 
-            score += (add_score + keep_score + del_score) / 3
+            score += (add_score+keep_score +del_score) / 3
 
-        scores.append(score / 4)  # Average over n-grams
+        scores.append(score / 4)  #average 
 
     return np.mean(scores) * 100
 
@@ -283,8 +280,8 @@ class RLAgent:
         self.vocab_size = vocab_size
         self.max_length = max_length
         self.memory = deque(maxlen=2000)
-        self.gamma = 0.95  # discount rate
-        self.epsilon = 1.0  # exploration rate
+        self.gamma = 0.95  #discount rate
+        self.epsilon = 1.0  #exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
@@ -339,9 +336,9 @@ class RLAgent:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
-# ============================================================================
+
 # LEXICAL-SEMANTIC LOSS
-# ============================================================================
+
 class LexicalSemanticLoss(tf.keras.layers.Layer):
     def __init__(self, vocab_size, embedding_dim):
         super(LexicalSemanticLoss, self).__init__()
@@ -400,9 +397,9 @@ class LexicalSemanticLoss(tf.keras.layers.Layer):
         cosine_sim = tf.reduce_sum(target_embed * pred_embed, axis=-1)
         return 1.0 - tf.reduce_mean(cosine_sim)
 
-# ============================================================================
-# LOSS FUNCTION
-# ============================================================================
+
+# loss fns
+
 loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
     from_logits=True, reduction='none')
 
@@ -413,35 +410,35 @@ def loss_function(real, pred):
     loss_ *= mask
     return tf.reduce_mean(loss_)
 
-def train_epoch(train_data, valid_data, rl_agent, lex_sem_loss):
+def train_epoch(train_data, valid_data, rl_agent,lex_sem_loss):
     train_src, train_tgt = train_data
-    train_loss = tf.keras.metrics.Mean()
-    train_sari = tf.keras.metrics.Mean()
+    train_loss= tf.keras.metrics.Mean()
+    train_sari =tf.keras.metrics.Mean()
 
     dataset = tf.data.Dataset.from_tensor_slices((train_src, train_tgt))
     dataset = dataset.shuffle(1000).batch(config.batch_size)
 
     for batch, (src, tgt) in enumerate(dataset):
-        # Standard training step
+        
         loss = train_step(src, tgt)
 
-        # Generate simplifications for RL
+        #generating simplifications for RL
         predictions = model((src, tgt[:, :-1]))
-        simplified = tf.argmax(predictions, axis=-1)
+        simplified =tf.argmax(predictions, axis=-1)
 
-        # Calculate SARI rewards
-        pred_texts = tokenizer.sequences_to_texts(simplified.numpy())
-        src_texts = tokenizer.sequences_to_texts(src.numpy())
+        #calculate SARI rewards when model performs correctly or prdicts correctly
+        pred_texts= tokenizer.sequences_to_texts(simplified.numpy())
+        src_texts =tokenizer.sequences_to_texts(src.numpy())
         tgt_texts = tokenizer.sequences_to_texts(tgt.numpy())
 
-        # Calculate rewards for each sequence in the batch
+        #calculating rewards for each sequence in the batch
         rewards = []
         for s, p, t in zip(src_texts, pred_texts, tgt_texts):
-            reward = calculate_sari([s], [p], [t])
+            reward =calculate_sari([s], [p], [t])
             rewards.append(reward)
         rewards = np.array(rewards)
 
-        # Store experiences in RL agent's memory
+        # store experiences in RL agent's memory
         for i in range(len(src)):
             rl_agent.remember(
                 src[i].numpy(),
@@ -451,14 +448,14 @@ def train_epoch(train_data, valid_data, rl_agent, lex_sem_loss):
                 True
             )
 
-        # RL training step
+        #RL training step
         if batch % 10 == 0:
             rl_agent.replay(32)
 
-        # Add lexical-semantic loss
+        #lexical-semantic loss adddition
         lex_sem = lex_sem_loss(tgt[:, 1:], predictions)
 
-        # Cast rewards to float32 before subtraction
+        #cast rewards to float32 before subtraction floattype=32
         total_loss = loss + 0.1 * lex_sem - 0.01 * tf.reduce_mean(tf.cast(rewards, tf.float32))
 
         train_loss(total_loss)
@@ -473,26 +470,26 @@ def train_epoch(train_data, valid_data, rl_agent, lex_sem_loss):
 
 def evaluate_model(model, data, batch_size=32):
     src_data, tgt_data = data
-    total_loss = []
-    total_sari = []
+    total_loss=[]
+    total_sari =[]
 
     for i in range(0, len(src_data), batch_size):
-        src_batch = src_data[i:i + batch_size]
-        tgt_batch = tgt_data[i:i + batch_size]
+        src_batch =src_data[i:i +batch_size]
+        tgt_batch = tgt_data[i:i+ batch_size]
 
-        predictions = model((src_batch, tgt_batch[:, :-1]), training=False)
+        predictions = model((src_batch,tgt_batch[:, :-1]),training=False)
         loss = loss_function(tgt_batch[:, 1:], predictions)
         total_loss.append(loss)
 
         pred_texts = tokenizer.sequences_to_texts(
             tf.argmax(predictions, axis=-1).numpy())
-        src_texts = tokenizer.sequences_to_texts(src_batch)
-        tgt_texts = tokenizer.sequences_to_texts(tgt_batch)
+        src_texts =tokenizer.sequences_to_texts(src_batch)
+        tgt_texts= tokenizer.sequences_to_texts(tgt_batch)
 
-        sari = calculate_sari(src_texts, pred_texts, tgt_texts)
+        sari =calculate_sari(src_texts, pred_texts, tgt_texts)
         total_sari.append(sari)
 
-    return np.mean(total_loss), np.mean(total_sari)
+    return np.mean(total_loss),np.mean(total_sari)
 
 # ============================================================================
 # TRAINING FUNCTIONS
@@ -631,17 +628,17 @@ if __name__ == "__main__":
                 print("Early stopping triggered!")
                 break
 
-        # Final evaluation
+        #final evaluation
         print("\nTraining completed! Evaluating on test set...")
         test_loss, test_sari = evaluate_model(model, test_data)
         print(f'Final Test Results:')
         print(f'Loss: {test_loss:.4f}')
         print(f'SARI: {test_sari:.2f}')
 
-        # Plot training history
+       
         plot_training_history(history)
 
-        # Save final model
+        #saving model
         model.save(os.path.join(config.model_dir, 'final_model'))
         print("Final model saved successfully!")
 
@@ -649,9 +646,9 @@ if __name__ == "__main__":
         print(f"An error occurred: {str(e)}")
         raise
 
-# ============================================================================
-# BUILD AND SAVE EMBEDDINGS
-# ============================================================================
+
+#BUILD AND SAVE EMBEDDINGS
+
 if __name__ == "__main__":
     try:
         # Load data and initialize components
@@ -686,12 +683,12 @@ if __name__ == "__main__":
         print(f"An error occurred during embedding building: {str(e)}")
         raise
 
-# ============================================================================
-# TRAINING EXECUTION
-# ============================================================================
+
+#Training Execution
+
 if __name__ == "__main__":
     try:
-        # Load data and initialize components
+        
         print("Loading and preprocessing data...")
         train_data, valid_data, test_data, tokenizer = load_and_preprocess_data()
         print("Data loading completed!")
