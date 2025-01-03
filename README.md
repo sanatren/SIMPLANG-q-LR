@@ -12,9 +12,11 @@ Lexical-Semantic Loss: Maintains semantic meaning during simplification
 
 <h1>Research Findings</h1>
 Model Performance
-Successfully combines supervised learning with RL
-SARI score optimization through RL rewards
-Effective semantic meaning preservation
+1.Successfully combines supervised learning with RL
+
+2.SARI score optimization through RL rewards
+
+3.Effective semantic meaning preservation
 Training Insights
 Batch Size Impact
 Larger batch sizes (128-256) show better convergence
