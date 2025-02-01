@@ -70,7 +70,7 @@ Hardware Requirements
 For optimal performance:
 | GPU Model | VRAM | Batch Size | Training Time (50 epochs) |
 |-----------|------|------------|---------------------------|
-| A100 80GB | 80GB | 256 | ~1-1.5 days |
+| A100 80GB | 80GB | 256 | ~1-1.5 days (minimum)|
 | A100 40GB | 40GB | 256 | ~ days |
 | V100 32GB | 32GB | 128 | ~ days |
 | T4 16GB | 16GB | 128 | ~ days |
@@ -81,4 +81,6 @@ For faster training:
 | H100 80GB | 80GB | 512+ | ~ hours |
 | 8x H100 | 640GB| 2048+ | ~ hours |
 | 8x A100 | 640GB| 1024+ | ~ hours |
+
+### You can use this architecture to create a Text simplifier on almost every sentence of english. (requires high GPUs for training).
 
