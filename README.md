@@ -52,7 +52,7 @@ Future Work
 
 [ ] Add multi-GPU training support
 
-under work... for more hypertuning
+under work.... for more hypertuning
 
 
 <h1>Performance Analysis</h1>
