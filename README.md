@@ -41,20 +41,6 @@ Gradient accumulation
 
 Distributed training support
 
-Future Work
-[ ] Implement beam search for inference
-
-[ ] Add support for multiple reference simplifications
-
-[ ] Explore transformer-based architectures
-
-[ ] Implement dynamic batch sizing
-
-[ ] Add multi-GPU training support
-
-under work.... for more hypertuning
-
-
 <h1>Performance Analysis</h1>
 Training Metrics
 
