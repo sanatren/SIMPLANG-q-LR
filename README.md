@@ -56,7 +56,7 @@ Hardware Requirements
 For optimal performance:
 | GPU Model | VRAM | Batch Size | Training Time (50 epochs) |
 |-----------|------|------------|---------------------------|
-| A100 80GB | 80GB | 256 | ~1-1.5 days (minimum)|
+| A100 80GB | 80GB | 256 | ~1 week- 2 weeks(minimum)|
 | A100 40GB | 40GB | 256 | ~ days |
 | V100 32GB | 32GB | 128 | ~ days |
 | T4 16GB | 16GB | 128 | ~ days |
