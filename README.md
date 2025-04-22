@@ -11,6 +11,7 @@ Reinforcement Learning Agent: Optimizes for SARI score
 Lexical-Semantic Loss: Maintains semantic meaning during simplification
 
 <h1>Research Findings</h1>
+
 Model Performance
 
 1.Successfully combines supervised learning with RL
@@ -42,6 +43,7 @@ Gradient accumulation
 Distributed training support
 
 <h1>Performance Analysis</h1>
+
 Training Metrics
 
 Dataset: WikiLarge
